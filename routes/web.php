@@ -51,30 +51,6 @@ switch ($controller) {
 
         break;
 
-    case 'cita':
-
-        require_once __DIR__ . '/../app/controllers/CitaController.php';
-
-        $ctrl = new CitaController();
-
-        switch ($action){
-
-        case 'index':
-        $ctrl->index();
-        break;
-
-        case 'crear':
-        $ctrl->crear();
-        break;
-
-        case 'guardar':
-        $ctrl->guardar();
-        break;
-
-        }
-
-        break;
-
     default:
         echo "Controlador no encontrado";
 }

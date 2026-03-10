@@ -1,4 +1,3 @@
--- Active: 1770612394739@@127.0.0.1@3306@citas_medicas
 CREATE DATABASE IF NOT EXISTS citas_medicas
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
@@ -64,20 +63,3 @@ INSERT INTO citas (paciente_id, medico_id, fecha, hora, motivo, estado) VALUES
 (5, 4, DATE_ADD(CURDATE(), INTERVAL 2 DAY), '15:30:00', 'Consulta dermatológica', 'pendiente'),
 (1, 2, DATE_SUB(CURDATE(), INTERVAL 7 DAY), '09:00:00', 'Consulta general', 'completada'),
 (3, 1, DATE_SUB(CURDATE(), INTERVAL 3 DAY), '16:00:00', 'Control médico', 'cancelada');
-
-
-ALTER TABLE citas
-DROP COLUMN hora;
-
-ALTER TABLE citas
-ADD hora_inicio TIME NOT NULL,
-ADD hora_fin TIME NOT NULL;
-
-SET @hora = '08:00:00';
-
-UPDATE citas
-SET 
-hora_inicio = @hora,
-hora_fin = ADDTIME(@hora,'00:30:00');
-
-SET @hora = ADDTIME(@hora,'00:30:00');
