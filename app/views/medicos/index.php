@@ -1,31 +1,44 @@
-<h2>Lista de Médicos</h2>
+<?php require_once __DIR__ . '/../layout/header.php'; ?>
 
-<a href="index.php?controller=medico&action=crear">Nuevo Médico</a>
+<div class="table-card">
+    <div class="table-header">
+        <h2>Gestión de médicos</h2>
+        <a href="index.php?controller=medico&action=crear" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Nuevo médico
+        </a>
+    </div>
 
-<table border="1">
+    <?php if (!empty($medicos)): ?>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre completo</th>
+                        <th>Especialidad</th>
+                        <th>Teléfono</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($medicos as $m): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($m['id']); ?></td>
+                            <td><?= htmlspecialchars($m['nombre'] . ' ' . $m['apellido']); ?></td>
+                            <td><?= htmlspecialchars($m['especialidad']); ?></td>
+                            <td><?= htmlspecialchars($m['telefono']); ?></td>
+                            <td><?= htmlspecialchars($m['email']); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php else: ?>
+        <div class="empty-box">
+            <i class="fa-solid fa-user-doctor" style="font-size:32px; margin-bottom:10px;"></i>
+            <p>No hay médicos registrados.</p>
+        </div>
+    <?php endif; ?>
+</div>
 
-<tr>
-<th>ID</th>
-<th>Nombre</th>
-<th>Apellido</th>
-<th>Especialidad</th>
-<th>Telefono</th>
-<th>Email</th>
-</tr>
-
-<?php foreach($medicos as $m): ?>
-
-<tr>
-
-<td><?= $m['id'] ?></td>
-<td><?= $m['nombre'] ?></td>
-<td><?= $m['apellido'] ?></td>
-<td><?= $m['especialidad'] ?></td>
-<td><?= $m['telefono'] ?></td>
-<td><?= $m['email'] ?></td>
-
-</tr>
-
-<?php endforeach; ?>
-
-</table>
+<?php require_once __DIR__ . '/../layout/footer.php'; ?>

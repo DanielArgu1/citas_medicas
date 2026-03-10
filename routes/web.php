@@ -51,6 +51,25 @@ switch ($controller) {
 
         break;
 
+<<<<<<< HEAD
     default:
         echo "Controlador no encontrado";
+=======
+    case 'dashboard':
+
+        require_once __DIR__ . '/../app/controllers/DashboardController.php';
+
+        $ctrl = new DashboardController();
+
+        switch($action){
+
+        case 'index':
+        $ctrl->index();
+        break;
+
+        }
+
+    break;
+
+>>>>>>> 07c8788 (se agregaron vistas a formularios)
 }

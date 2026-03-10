@@ -1,32 +1,47 @@
-<h2>Registrar Médico</h2>
+<?php require_once __DIR__ . '/../layout/header.php'; ?>
 
-<form method="POST" action="index.php?controller=medico&action=guardar">
+<div class="form-card">
+    <div class="form-header">
+        <h2>Registrar médico</h2>
+        <a href="index.php?controller=medico&action=index" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+    </div>
 
-<label>Nombre</label>
-<input type="text" name="nombre" required>
+    <form method="POST" action="index.php?controller=medico&action=guardar">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="nombre">Nombre</label>
+                <input type="text" name="nombre" id="nombre" required>
+            </div>
 
-<br>
+            <div class="form-group">
+                <label for="apellido">Apellido</label>
+                <input type="text" name="apellido" id="apellido" required>
+            </div>
 
-<label>Apellido</label>
-<input type="text" name="apellido" required>
+            <div class="form-group">
+                <label for="especialidad">Especialidad</label>
+                <input type="text" name="especialidad" id="especialidad" required>
+            </div>
 
-<br>
+            <div class="form-group">
+                <label for="telefono">Teléfono</label>
+                <input type="text" name="telefono" id="telefono">
+            </div>
 
-<label>Especialidad</label>
-<input type="text" name="especialidad" required>
+            <div class="form-group full">
+                <label for="email">Correo electrónico</label>
+                <input type="email" name="email" id="email">
+            </div>
+        </div>
 
-<br>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar médico
+            </button>
+        </div>
+    </form>
+</div>
 
-<label>Telefono</label>
-<input type="text" name="telefono">
-
-<br>
-
-<label>Email</label>
-<input type="email" name="email">
-
-<br><br>
-
-<button type="submit">Guardar</button>
-
-</form>
+<?php require_once __DIR__ . '/../layout/footer.php'; ?>

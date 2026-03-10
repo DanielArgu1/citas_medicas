@@ -1,37 +1,52 @@
-<h2>Registrar Paciente</h2>
+<?php require_once __DIR__ . '/../layout/header.php'; ?>
 
-<form method="POST" action="index.php?controller=paciente&action=guardar">
+<div class="form-card">
+    <div class="form-header">
+        <h2>Registrar paciente</h2>
+        <a href="index.php?controller=paciente&action=index" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+    </div>
 
-<label>Nombre</label>
-<input type="text" name="nombre" required>
+    <form method="POST" action="index.php?controller=paciente&action=guardar">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="nombre">Nombre</label>
+                <input type="text" name="nombre" id="nombre" required>
+            </div>
 
-<br>
+            <div class="form-group">
+                <label for="apellido">Apellido</label>
+                <input type="text" name="apellido" id="apellido" required>
+            </div>
 
-<label>Apellido</label>
-<input type="text" name="apellido" required>
+            <div class="form-group">
+                <label for="cedula">Cédula</label>
+                <input type="text" name="cedula" id="cedula" required>
+            </div>
 
-<br>
+            <div class="form-group">
+                <label for="telefono">Teléfono</label>
+                <input type="text" name="telefono" id="telefono">
+            </div>
 
-<label>Cedula</label>
-<input type="text" name="cedula" required>
+            <div class="form-group">
+                <label for="email">Correo electrónico</label>
+                <input type="email" name="email" id="email">
+            </div>
 
-<br>
+            <div class="form-group">
+                <label for="fecha_nacimiento">Fecha de nacimiento</label>
+                <input type="date" name="fecha_nacimiento" id="fecha_nacimiento">
+            </div>
+        </div>
 
-<label>Telefono</label>
-<input type="text" name="telefono">
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar paciente
+            </button>
+        </div>
+    </form>
+</div>
 
-<br>
-
-<label>Email</label>
-<input type="email" name="email">
-
-<br>
-
-<label>Fecha nacimiento</label>
-<input type="date" name="fecha_nacimiento">
-
-<br><br>
-
-<button type="submit">Guardar</button>
-
-</form>
+<?php require_once __DIR__ . '/../layout/footer.php'; ?>
