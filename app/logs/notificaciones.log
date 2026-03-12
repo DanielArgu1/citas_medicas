@@ -1,0 +1,11 @@
+[2026-03-09 08:39:50] TIPO: cancelada | ASUNTO: Cita médica cancelada | PARA: jose.hernandez@email.com | TEL: 9876-5435 | Hola José Hernández, su cita del 2026-03-10 con Roberto Flores fue cancelada.
+[2026-03-09 08:40:34] TIPO: completada | ASUNTO: Cita médica completada | PARA: jose.hernandez@email.com | TEL: 9876-5435 | Hola José Hernández, su cita del 2026-03-10 con Roberto Flores fue marcada como completada.
+[2026-03-09 08:40:38] TIPO: cancelada | ASUNTO: Cita médica cancelada | PARA: jose.hernandez@email.com | TEL: 9876-5435 | Hola José Hernández, su cita del 2026-03-10 con Roberto Flores fue cancelada.
+[2026-03-10 03:06:02] TIPO: creada | ASUNTO: Nueva cita médica | PARA: ana.lopez@email.com | TEL: 9876-5434 | Hola Ana López, su cita quedó programada para el 2026-03-11 de 12:00:00 a 12:30:00 con Brayan Valladares. Estado: pendiente
+[2026-03-10 03:09:19] TIPO: cancelada | ASUNTO: Cita médica cancelada | PARA: ana.lopez@email.com | TEL: 9876-5434 | Hola Ana López, su cita del 2026-03-11 con Brayan Valladares fue cancelada.
+[2026-03-10 06:53:53] TIPO: creada | ASUNTO: Nueva cita médica | PARA: laura.rodriguez@email.com | TEL: 9876-5436 | Hola Laura Rodríguez, su cita quedó programada para el 2026-03-20 de 11:00:00 a 11:30:00 con Brayan Agustin Valladares Arguello. Estado: pendiente
+[2026-03-10 07:41:32] TIPO: creada | ASUNTO: Nueva cita médica | PARA: ana.lopez@email.com | TEL: 9876-5434 | Hola Ana López, su cita quedó programada para el 2026-03-31 de 14:30:00 a 15:00:00 con Brayan Agustin Valladares Arguello. Estado: pendiente
+[2026-03-11 00:50:32] Cita médica completada | PARA: ana.lopez@email.com | TEL: 9876-5434 | Hola Ana López, su cita del 2026-03-31 con Brayan Agustin Valladares Arguello fue marcada como completada.
+[2026-03-11 00:53:29] Cita médica cancelada | PARA: laura.rodriguez@email.com | TEL: 9876-5436 | Hola Laura Rodríguez, su cita del 2026-03-12 con Patricia Sánchez fue cancelada.
+[2026-03-11 01:02:03] Cita médica completada | PARA: jose.hernandez@email.com | TEL: 9876-5435 | Hola José Hernández, su cita del 2026-03-11 con Roberto Flores fue marcada como completada.
+[2026-03-11 01:03:23] Cita médica cancelada | PARA: maria.gonzalez@email.com | TEL: 9876-5432 | Hola María González, su cita del 2026-03-10 con Roberto Flores fue cancelada.
