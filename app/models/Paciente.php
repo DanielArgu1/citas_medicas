@@ -5,13 +5,21 @@ require_once __DIR__ . '/../core/Model.php';
 class Paciente extends Model {
 
     public function obtenerTodos(){
-        $stmt = $this->db->prepare("SELECT * FROM pacientes ORDER BY id DESC");
+        $sql = "SELECT p.*, u.id AS usuario_id, u.estado AS usuario_estado
+                FROM pacientes p
+                LEFT JOIN usuarios u ON u.paciente_id = p.id AND u.rol = 'paciente'
+                ORDER BY p.id DESC";
+        $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
     public function obtenerPorId($id){
-        $sql = "SELECT * FROM pacientes WHERE id = :id";
+        $sql = "SELECT p.*, u.id AS usuario_id, u.estado AS usuario_estado
+                FROM pacientes p
+                LEFT JOIN usuarios u ON u.paciente_id = p.id AND u.rol = 'paciente'
+                WHERE p.id = :id
+                LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
@@ -22,7 +30,7 @@ class Paciente extends Model {
         $sql = "INSERT INTO pacientes (nombre, apellido, cedula, telefono, email, fecha_nacimiento)
                 VALUES (:nombre, :apellido, :cedula, :telefono, :email, :fecha_nacimiento)";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
+        $stmt->execute([
             ':nombre' => $data['nombre'],
             ':apellido' => $data['apellido'],
             ':cedula' => $data['cedula'],
@@ -30,6 +38,7 @@ class Paciente extends Model {
             ':email' => $data['email'],
             ':fecha_nacimiento' => $data['fecha_nacimiento'] ?: null
         ]);
+        return (int)$this->db->lastInsertId();
     }
 
     public function actualizar($id, $data){
@@ -57,8 +66,20 @@ class Paciente extends Model {
         $sql = "SELECT id FROM pacientes WHERE cedula = :cedula" . ($exceptId ? " AND id != :id" : "") . " LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $params = [':cedula' => $cedula];
-        if ($exceptId) $params[':id'] = $exceptId;
+        if ($exceptId) {
+            $params[':id'] = $exceptId;
+        }
         $stmt->execute($params);
         return (bool)$stmt->fetch();
+    }
+
+    public function total(){
+        return (int)$this->db->query("SELECT COUNT(*) total FROM pacientes")->fetch()['total'];
+    }
+
+    public function totalHistoriales($pacienteId){
+        $stmt = $this->db->prepare("SELECT COUNT(*) total FROM historial_clinico WHERE paciente_id = :paciente_id");
+        $stmt->execute([':paciente_id' => $pacienteId]);
+        return (int)$stmt->fetch()['total'];
     }
 }

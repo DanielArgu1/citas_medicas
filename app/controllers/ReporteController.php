@@ -1,11 +1,14 @@
 <?php
 
+require_once __DIR__ . '/../middleware/auth.php';
 require_once __DIR__ . '/../models/Reporte.php';
 
 class ReporteController
 {
     public function index()
     {
+        require_roles(['admin', 'recepcion']);
+
         $reporteModel = new Reporte();
 
         $filters = [

@@ -1,7 +1,13 @@
 <?php require_once __DIR__ . '/../layout/header.php'; ?>
 <div class="table-card">
     <div class="table-header">
-        <h2><?= current_user_role() === 'medico' ? 'Mis citas' : 'Gestión de citas' ?></h2>
+        <h2>
+            <?php
+                if (current_user_role() === 'medico') echo 'Mis citas';
+                elseif (current_user_role() === 'paciente') echo 'Mis citas';
+                else echo 'Gestión de citas';
+            ?>
+        </h2>
         <?php if (in_array(current_user_role(), ['admin','recepcion'], true)): ?>
             <a href="index.php?controller=cita&action=crear" class="btn btn-primary">
                 <i class="fa-solid fa-plus"></i> Nueva cita
@@ -43,9 +49,11 @@
                     <td><span class="badge badge-<?= htmlspecialchars($c['estado']) ?>"><?= htmlspecialchars(ucfirst($c['estado'])) ?></span></td>
                     <td>
                         <div class="actions">
-                           <a class="btn btn-info" href="index.php?controller=historial&action=registrar&paciente_id=<?= $c['paciente_id'] ?>&cita_id=<?= $c['id'] ?>" title="Registrar evolución clínica">
-                                <i class="fa-solid fa-notes-medical"></i>
-                           </a>
+                            <?php if (current_user_role() === 'medico'): ?>
+                                <a class="btn btn-info" href="index.php?controller=historial&action=registrar&paciente_id=<?= $c['paciente_id'] ?>&cita_id=<?= $c['id'] ?>" title="Registrar evolución clínica">
+                                    <i class="fa-solid fa-notes-medical"></i>
+                                </a>
+                            <?php endif; ?>
 
                             <?php if (in_array(current_user_role(), ['admin','recepcion'], true)): ?>
                                 <a class="btn btn-secondary" href="index.php?controller=cita&action=editar&id=<?= $c['id'] ?>">
@@ -53,7 +61,7 @@
                                 </a>
                             <?php endif; ?>
 
-                            <?php if ($c['estado'] !== 'completada'): ?>
+                            <?php if (current_user_role() !== 'paciente' && $c['estado'] !== 'completada'): ?>
                                 <a class="btn btn-success" href="index.php?controller=cita&action=completar&id=<?= $c['id'] ?>">
                                     <i class="fa-solid fa-check"></i>
                                 </a>

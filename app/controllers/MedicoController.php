@@ -134,28 +134,53 @@ class MedicoController {
             exit;
         }
 
-        $medicoId = $this->medico->crear($data);
-
-        if (!$medicoId) {
-            flash('error', 'No se pudo registrar el médico.');
+        if ($this->usuario->emailEnUsoPorOtro($data['email'])) {
+            flash('error', 'Ese correo ya está siendo usado por otro usuario del sistema.');
             header("Location: index.php?controller=medico&action=crear");
             exit;
         }
 
-        $passwordTemporal = 'Med' . rand(1000, 9999) . '!';
+        $db = new Database();
+        $conn = $db->conectar();
 
-        $this->usuario->crear([
-            'nombre' => $data['nombre'] . ' ' . $data['apellido'],
-            'email' => $data['email'],
-            'password' => password_hash($passwordTemporal, PASSWORD_DEFAULT),
-            'rol' => 'medico',
-            'medico_id' => $medicoId,
-            'estado' => 'activo'
-        ]);
+        try {
+            $conn->beginTransaction();
 
-        flash('success', "Médico registrado. Usuario: {$data['email']} | Contraseña temporal: {$passwordTemporal}");
-        header("Location: index.php?controller=medico&action=index");
-        exit;
+            $stmt = $conn->prepare("INSERT INTO medicos (nombre, apellido, especialidad, telefono, email)
+                                    VALUES (:nombre, :apellido, :especialidad, :telefono, :email)");
+            $stmt->execute([
+                ':nombre' => $data['nombre'],
+                ':apellido' => $data['apellido'],
+                ':especialidad' => $data['especialidad'],
+                ':telefono' => $data['telefono'],
+                ':email' => $data['email'],
+            ]);
+
+            $medicoId = (int)$conn->lastInsertId();
+            $passwordTemporal = 'Med' . rand(1000, 9999) . '!';
+
+            $stmtUsuario = $conn->prepare("INSERT INTO usuarios (nombre, email, password, rol, medico_id, paciente_id, estado)
+                                           VALUES (:nombre, :email, :password, 'medico', :medico_id, NULL, 'activo')");
+            $stmtUsuario->execute([
+                ':nombre' => $data['nombre'] . ' ' . $data['apellido'],
+                ':email' => $data['email'],
+                ':password' => password_hash($passwordTemporal, PASSWORD_DEFAULT),
+                ':medico_id' => $medicoId,
+            ]);
+
+            $conn->commit();
+
+            flash('success', "Médico registrado. Usuario: {$data['email']} | Contraseña temporal: {$passwordTemporal}");
+            header("Location: index.php?controller=medico&action=index");
+            exit;
+        } catch (Throwable $e) {
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
+            }
+            flash('error', 'No se pudo registrar el médico. Verifica que el correo no esté duplicado.');
+            header("Location: index.php?controller=medico&action=crear");
+            exit;
+        }
     }
 
     public function editar(){
@@ -191,6 +216,13 @@ class MedicoController {
             exit;
         }
 
+        $usuario = $this->usuario->obtenerPorMedicoId($id);
+        if ($usuario && $this->usuario->emailEnUsoPorOtro($data['email'], (int)$usuario['id'])) {
+            flash('error', 'Ese correo ya está siendo usado por otro usuario del sistema.');
+            header("Location: index.php?controller=medico&action=editar&id={$id}");
+            exit;
+        }
+
         $resultado = $this->medico->actualizar($id, $data);
 
         if (!$resultado) {
@@ -199,20 +231,9 @@ class MedicoController {
             exit;
         }
 
-        $usuario = $this->usuario->obtenerPorMedicoId($id);
-
         if ($usuario) {
             $nombreCompleto = $data['nombre'] . ' ' . $data['apellido'];
-
-            $db = new Database();
-            $conn = $db->conectar();
-
-            $stmt = $conn->prepare("UPDATE usuarios SET nombre = :nombre, email = :email WHERE medico_id = :medico_id");
-            $stmt->execute([
-                ':nombre' => $nombreCompleto,
-                ':email' => $data['email'],
-                ':medico_id' => $id
-            ]);
+            $this->usuario->actualizarDatosPorMedicoId($id, $nombreCompleto, $data['email']);
 
             if (!empty($_POST['reset_password'])) {
                 $newPass = 'Med' . rand(1000, 9999) . '!';

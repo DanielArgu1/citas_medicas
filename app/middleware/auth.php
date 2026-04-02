@@ -22,6 +22,16 @@ function current_user_id()
     return $_SESSION['usuario_id'] ?? null;
 }
 
+function current_medico_id()
+{
+    return $_SESSION['medico_id'] ?? null;
+}
+
+function current_paciente_id()
+{
+    return $_SESSION['paciente_id'] ?? null;
+}
+
 function require_roles(array $roles)
 {
     require_login();

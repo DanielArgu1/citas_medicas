@@ -53,6 +53,7 @@ class AuthController {
         $_SESSION['usuario_nombre'] = $usuario['nombre'];
         $_SESSION['usuario_rol'] = $usuario['rol'];
         $_SESSION['medico_id'] = $usuario['medico_id'] ?? null;
+        $_SESSION['paciente_id'] = $usuario['paciente_id'] ?? null;
 
         header("Location: index.php?controller=dashboard&action=index");
         exit;

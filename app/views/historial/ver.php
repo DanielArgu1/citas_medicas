@@ -314,7 +314,7 @@
                 <p>Consulta diagnósticos, tratamientos y evolución médica del paciente.</p>
             </div>
 
-            <a href="index.php?controller=paciente&action=index" class="btn btn-secondary">
+            <a href="<?= current_user_role() === 'paciente' ? 'index.php?controller=dashboard&action=index' : 'index.php?controller=paciente&action=index' ?>" class="btn btn-secondary">
                 <i class="fa-solid fa-arrow-left"></i> Volver
             </a>
         </div>

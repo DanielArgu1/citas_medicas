@@ -23,7 +23,7 @@
         <div class="form-group"><label for="password">Contraseña</label><input type="password" name="password" id="password" required></div>
         <button type="submit" class="btn-login"><i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión</button>
     </form>
-    <div class="demo"><strong>Usuarios de prueba</strong><br>admin@admin.com<br>recepcion@clinica.com<br>dr.flores@hospital.com<br>Contraseña: <strong>123456</strong></div>
+    <div class="demo"><strong>Usuarios de prueba</strong><br>admin@admin.com<br>recepcion@clinica.com<br>dr.flores@hospital.com<br>maria.gonzalez@email.com<br>Contraseña base de prueba: <strong>123456</strong></div>
 </div>
 </body>
 </html>

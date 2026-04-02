@@ -11,7 +11,7 @@
         <td><?= htmlspecialchars($m['especialidad']) ?></td>
         <td><?= htmlspecialchars($m['telefono']) ?></td>
         <td><?= htmlspecialchars($m['email']) ?></td>
-        <td><div class="actions"><a class="btn btn-secondary" href="index.php?controller=medico&action=editar&id=<?= $m['id'] ?>"><i class="fa-solid fa-pen"></i></a><a class="btn btn-danger" href="index.php?controller=medico&action=eliminar&id=<?= $m['id'] ?>" data-confirm="¿Eliminar este médico?"><i class="fa-solid fa-trash"></i></a></div></td>
+        <td><div class="actions"><a class="btn btn-secondary" href="index.php?controller=medico&action=editar&id=<?= $m['id'] ?>"><i class="fa-solid fa-pen"></i></a><a class="btn btn-danger" href="index.php?controller=medico&action=eliminar&id=<?= $m['id'] ?>" data-confirm="¿Eliminar este médico?"><i class="fa-solid fa-rotate"></i></a></div></td>
     </tr>
     <?php endforeach; ?>
     </tbody></table></div>

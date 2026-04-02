@@ -2,17 +2,41 @@
 
 require_once __DIR__ . '/../middleware/auth.php';
 require_once __DIR__ . '/../core/Model.php';
+require_once __DIR__ . '/../models/Paciente.php';
+require_once __DIR__ . '/../models/Cita.php';
 
 class DashboardController extends Model {
     public function index(){
         require_login();
+
+        $role = current_user_role();
+        $pacienteModel = new Paciente();
+        $citaModel = new Cita();
+
+        if ($role === 'paciente') {
+            $pacienteId = (int)current_paciente_id();
+            $paciente = $pacienteModel->obtenerPorId($pacienteId);
+
+            $totalPacientes = 1;
+            $totalMedicos = (int)$this->db->query("SELECT COUNT(*) total FROM medicos")->fetch()['total'];
+            $totalCitas = $citaModel->totalPorPaciente($pacienteId);
+            $stmtHoy = $this->db->prepare("SELECT COUNT(*) total FROM citas WHERE paciente_id = :paciente_id AND fecha = CURDATE()");
+            $stmtHoy->execute([':paciente_id' => $pacienteId]);
+            $citasHoy = (int)$stmtHoy->fetch()['total'];
+            $citasPendientes = $citaModel->contarPendientesPorPaciente($pacienteId);
+            $totalHistoriales = $pacienteModel->totalHistoriales($pacienteId);
+            $ultimasCitas = $citaModel->obtenerPorPacienteUsuario(current_user_id());
+            $ultimasCitas = array_slice($ultimasCitas, 0, 5);
+            require_once __DIR__ . '/../views/dashboard.php';
+            return;
+        }
 
         $totalPacientes = (int)$this->db->query("SELECT COUNT(*) total FROM pacientes")->fetch()['total'];
         $totalMedicos = (int)$this->db->query("SELECT COUNT(*) total FROM medicos")->fetch()['total'];
         $totalCitas = (int)$this->db->query("SELECT COUNT(*) total FROM citas")->fetch()['total'];
         $citasHoy = (int)$this->db->query("SELECT COUNT(*) total FROM citas WHERE fecha = CURDATE()")->fetch()['total'];
 
-        if (current_user_role() === 'medico') {
+        if ($role === 'medico') {
             $sql = "SELECT CONCAT(p.nombre,' ',p.apellido) paciente, CONCAT(m.nombre,' ',m.apellido) medico,
                            c.fecha, c.hora_inicio, c.estado
                     FROM citas c

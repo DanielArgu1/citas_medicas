@@ -55,6 +55,8 @@ class CitaController {
         require_login();
         if (current_user_role() === 'medico') {
             $citas = $this->cita->obtenerPorMedicoUsuario(current_user_id());
+        } elseif (current_user_role() === 'paciente') {
+            $citas = $this->cita->obtenerPorPacienteUsuario(current_user_id());
         } else {
             $citas = $this->cita->obtenerTodas();
         }
@@ -131,7 +133,13 @@ class CitaController {
         $id = (int)($_GET['id'] ?? 0);
         $cita = $this->cita->obtenerPorId($id);
         if (!$cita) { flash('error', 'Cita no encontrada.'); header("Location: index.php?controller=cita&action=index"); exit; }
-        if (current_user_role() === 'medico' && (int)($_SESSION['medico_id'] ?? 0) !== (int)$cita['medico_id']) {
+
+        if (current_user_role() === 'paciente') {
+            flash('error', 'Un paciente no puede marcar citas como completadas.');
+            header("Location: index.php?controller=cita&action=index"); exit;
+        }
+
+        if (current_user_role() === 'medico' && (int)current_medico_id() !== (int)$cita['medico_id']) {
             flash('error', 'No puedes modificar citas de otro médico.');
             header("Location: index.php?controller=cita&action=index"); exit;
         }
@@ -146,10 +154,17 @@ class CitaController {
         $id = (int)($_GET['id'] ?? 0);
         $cita = $this->cita->obtenerPorId($id);
         if (!$cita) { flash('error', 'Cita no encontrada.'); header("Location: index.php?controller=cita&action=index"); exit; }
-        if (current_user_role() === 'medico' && (int)($_SESSION['medico_id'] ?? 0) !== (int)$cita['medico_id']) {
+
+        if (current_user_role() === 'medico' && (int)current_medico_id() !== (int)$cita['medico_id']) {
             flash('error', 'No puedes cancelar citas de otro médico.');
             header("Location: index.php?controller=cita&action=index"); exit;
         }
+
+        if (current_user_role() === 'paciente' && (int)current_paciente_id() !== (int)$cita['paciente_id']) {
+            flash('error', 'No puedes cancelar citas de otro paciente.');
+            header("Location: index.php?controller=cita&action=index"); exit;
+        }
+
         $this->cita->actualizarEstado($id, 'cancelada');
         $this->notify('cancelada', $this->cita->obtenerPorId($id));
         flash('info', 'La cita fue cancelada y el paciente fue notificado.');

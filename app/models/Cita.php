@@ -19,6 +19,10 @@ class Cita extends Model {
             $sql .= " AND c.medico_id = :medico_id";
             $params[':medico_id'] = $filters['medico_id'];
         }
+        if (!empty($filters['paciente_id'])) {
+            $sql .= " AND c.paciente_id = :paciente_id";
+            $params[':paciente_id'] = $filters['paciente_id'];
+        }
         if (!empty($filters['estado'])) {
             $sql .= " AND c.estado = :estado";
             $params[':estado'] = $filters['estado'];
@@ -37,7 +41,7 @@ class Cita extends Model {
         return $stmt->fetchAll();
     }
 
-  public function obtenerPorId($id){
+    public function obtenerPorId($id){
         $sql = "SELECT 
                     c.*,
                     CONCAT(p.nombre, ' ', p.apellido) AS paciente,
@@ -55,6 +59,7 @@ class Cita extends Model {
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
     public function cambiarEstado($id, $estado){
         $sql = "UPDATE citas SET estado = :estado WHERE id = :id";
         $stmt = $this->db->prepare($sql);
@@ -70,6 +75,20 @@ class Cita extends Model {
                 JOIN pacientes p ON c.paciente_id = p.id
                 JOIN medicos m ON c.medico_id = m.id
                 JOIN usuarios u ON u.medico_id = m.id
+                WHERE u.id = :usuario_id
+                ORDER BY c.fecha DESC, c.hora_inicio ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':usuario_id' => $usuarioId]);
+        return $stmt->fetchAll();
+    }
+
+    public function obtenerPorPacienteUsuario($usuarioId){
+        $sql = "SELECT c.*, CONCAT(p.nombre,' ',p.apellido) AS paciente,
+                       CONCAT(m.nombre,' ',m.apellido) AS medico
+                FROM citas c
+                JOIN pacientes p ON c.paciente_id = p.id
+                JOIN medicos m ON c.medico_id = m.id
+                JOIN usuarios u ON u.paciente_id = p.id
                 WHERE u.id = :usuario_id
                 ORDER BY c.fecha DESC, c.hora_inicio ASC";
         $stmt = $this->db->prepare($sql);
@@ -123,7 +142,7 @@ class Cita extends Model {
         return (int)$this->db->lastInsertId();
     }
 
-   public function actualizar($id, $data){
+    public function actualizar($id, $data){
         $horaFin = date('H:i:s', strtotime($data['hora_inicio'] . ' +30 minutes'));
 
         if (!$this->verificarDisponibilidad($data['medico_id'], $data['fecha'], $data['hora_inicio'], $horaFin, $id)) {
@@ -160,7 +179,7 @@ class Cita extends Model {
         return $stmt->execute([':estado' => $estado, ':id' => $id]);
     }
 
-   public function cancelarCitasVencidas(){
+    public function cancelarCitasVencidas(){
 
         require_once __DIR__ . '/../helpers/Notifier.php';
 
@@ -209,6 +228,34 @@ class Cita extends Model {
 
     public function totalHoy(){
         return (int)$this->db->query("SELECT COUNT(*) total FROM citas WHERE fecha = CURDATE()")->fetch()['total'];
+    }
+
+    public function totalPorPaciente($pacienteId){
+        $stmt = $this->db->prepare("SELECT COUNT(*) total FROM citas WHERE paciente_id = :paciente_id");
+        $stmt->execute([':paciente_id' => $pacienteId]);
+        return (int)$stmt->fetch()['total'];
+    }
+
+    public function proximasPorPaciente($pacienteId, $limit = 5){
+        $sql = "SELECT c.*, CONCAT(p.nombre,' ',p.apellido) AS paciente,
+                       CONCAT(m.nombre,' ',m.apellido) AS medico
+                FROM citas c
+                JOIN pacientes p ON c.paciente_id = p.id
+                JOIN medicos m ON c.medico_id = m.id
+                WHERE c.paciente_id = :paciente_id
+                  AND c.estado = 'pendiente'
+                  AND TIMESTAMP(c.fecha, c.hora_inicio) >= NOW()
+                ORDER BY c.fecha ASC, c.hora_inicio ASC
+                LIMIT {$limit}";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':paciente_id' => $pacienteId]);
+        return $stmt->fetchAll();
+    }
+
+    public function contarPendientesPorPaciente($pacienteId){
+        $stmt = $this->db->prepare("SELECT COUNT(*) total FROM citas WHERE paciente_id = :paciente_id AND estado = 'pendiente'");
+        $stmt->execute([':paciente_id' => $pacienteId]);
+        return (int)$stmt->fetch()['total'];
     }
 
     public function contarPorEstado(){
