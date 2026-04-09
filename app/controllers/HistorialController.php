@@ -1,11 +1,12 @@
 <?php
 
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/HistorialClinico.php';
 require_once __DIR__ . '/../models/Paciente.php';
 require_once __DIR__ . '/../models/Cita.php';
 
-class HistorialController {
+class HistorialController extends Controller {
 
     public function ver(){
         require_login();
@@ -32,6 +33,7 @@ class HistorialController {
         }
 
         $historial = $historialModel->obtenerPorPaciente($pacienteId);
+        $this->logActivity('VIEW', 'historial_clinico', 'Consultó el historial del paciente ID ' . $pacienteId . '.');
 
         require_once __DIR__ . '/../views/historial/ver.php';
     }
@@ -105,10 +107,12 @@ class HistorialController {
         ];
 
         $historialModel->crear($data);
+        $this->logActivity('INSERT', 'historial_clinico', 'Registró evolución clínica para el paciente ID ' . $data['paciente_id'] . '.');
 
         if (!empty($data['cita_id'])) {
             $citaModel = new Cita();
             $citaModel->actualizarEstado($data['cita_id'], 'completada');
+            $this->logActivity('UPDATE', 'citas', 'La cita ID ' . $data['cita_id'] . ' fue completada al registrar historial clínico.');
         }
 
         header('Location: index.php?controller=historial&action=registrar&paciente_id=' . $data['paciente_id'] . (!empty($data['cita_id']) ? '&cita_id=' . $data['cita_id'] : ''));

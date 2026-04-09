@@ -13,7 +13,10 @@
         <div class="table-card">
             <div class="table-header">
                 <h2>Mis citas recientes</h2>
-                <a href="index.php?controller=cita&action=index" class="btn btn-primary"><i class="fa-solid fa-eye"></i> Ver todas</a>
+                <div class="actions">
+                    <a href="index.php?controller=cita&action=crearPaciente" class="btn btn-primary"><i class="fa-solid fa-calendar-plus"></i> Agendar cita</a>
+                    <a href="index.php?controller=cita&action=index" class="btn btn-secondary"><i class="fa-solid fa-eye"></i> Ver todas</a>
+                </div>
             </div>
             <?php if (!empty($ultimasCitas)): ?>
             <div class="table-responsive">
@@ -46,8 +49,9 @@
                     <div><strong>Fecha de nacimiento:</strong><br><?= htmlspecialchars($paciente['fecha_nacimiento'] ?: 'No registrada') ?></div>
                 </div>
                 <div class="form-actions" style="margin-top:20px;">
+                    <a href="index.php?controller=cita&action=crearPaciente" class="btn btn-primary"><i class="fa-solid fa-calendar-plus"></i> Agendar cita</a>
                     <a href="index.php?controller=historial&action=ver&paciente_id=<?= (int)$paciente['id'] ?>" class="btn btn-secondary"><i class="fa-solid fa-notes-medical"></i> Mi historial</a>
-                    <a href="index.php?controller=paciente&action=perfil" class="btn btn-primary"><i class="fa-solid fa-user"></i> Ver perfil</a>
+                    <a href="index.php?controller=paciente&action=perfil" class="btn btn-info"><i class="fa-solid fa-user"></i> Ver perfil</a>
                 </div>
             <?php else: ?>
                 <div class="empty-box"><p>No se encontró tu información de paciente.</p></div>

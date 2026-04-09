@@ -1,19 +1,39 @@
 <?php
 
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/Paciente.php';
-require_once __DIR__ . '/../models/Usuario.php';
 require_once __DIR__ . '/../models/Cita.php';
 require_once __DIR__ . '/../models/HistorialClinico.php';
+require_once __DIR__ . '/../services/UserAccountService.php';
 require_once __DIR__ . '/../config/database.php';
 
-class PacienteController {
-    private $paciente;
-    private $usuario;
+class PacienteController extends Controller {
+    private Paciente $paciente;
+    private UserAccountService $accountService;
 
     public function __construct(){
         $this->paciente = new Paciente();
-        $this->usuario = new Usuario();
+        $this->accountService = new UserAccountService();
+    }
+
+    /**
+     * Método Privado para Auditoría
+     * Registra las acciones en la tabla 'auditoria'
+     */
+    private function registrarLog($accion, $detalles) {
+        try {
+            $conn = (new Database())->conectar();
+            $stmt = $conn->prepare("INSERT INTO auditoria (usuario_id, accion, tabla_afectada, detalles) VALUES (:u, :a, :t, :d)");
+            $stmt->execute([
+                ':u' => current_user_id() ?? ($_SESSION['usuario_id'] ?? 1), // Ajustar según tu variable de sesión de usuario logueado
+                ':a' => $accion,
+                ':t' => 'pacientes',
+                ':d' => $detalles
+            ]);
+        } catch (Throwable $e) {
+            // Error silencioso para no interrumpir el flujo si falla la auditoría
+        }
     }
 
     private function digits($value){
@@ -29,8 +49,7 @@ class PacienteController {
 
     private function formatPhone($value){
         $d = substr($this->digits($value), 0, 8);
-        if (strlen($d) <= 4) return $d;
-        return substr($d,0,4).'-'.substr($d,4);
+        return strlen($d) <= 4 ? $d : substr($d,0,4).'-'.substr($d,4);
     }
 
     private function validate($data, $exceptId = null){
@@ -63,44 +82,40 @@ class PacienteController {
         ];
     }
 
+    private function fullName(array $data): string
+    {
+        return trim($data['nombre'] . ' ' . $data['apellido']);
+    }
+
     public function index(){
         require_roles(['admin', 'recepcion']);
         $pacientes = $this->paciente->obtenerTodos();
-        require_once __DIR__ . '/../views/pacientes/index.php';
+        $this->render('pacientes/index', compact('pacientes'));
     }
 
     public function crear(){
         require_roles(['admin', 'recepcion']);
-        require_once __DIR__ . '/../views/pacientes/crear.php';
+        $this->render('pacientes/crear');
     }
 
     public function guardar(){
         require_roles(['admin', 'recepcion']);
-        if($_SERVER['REQUEST_METHOD'] !== 'POST'){
-            header("Location: index.php?controller=paciente&action=index"); exit;
-        }
+        $this->ensurePost('index.php?controller=paciente&action=index');
 
         $data = $this->payloadFromRequest();
         $error = $this->validate($data);
-
         if ($error) {
-            flash('error', $error);
-            header("Location: index.php?controller=paciente&action=crear");
-            exit;
+            $this->redirectWithFlash('error', $error, 'index.php?controller=paciente&action=crear');
         }
 
-        if ($this->usuario->emailEnUsoPorOtro($data['email'])) {
-            flash('error', 'Ese correo ya está siendo usado por otro usuario del sistema.');
-            header("Location: index.php?controller=paciente&action=crear");
-            exit;
+        if (!$this->accountService->emailDisponible($data['email'])) {
+            $this->redirectWithFlash('error', 'Ese correo ya está siendo usado por otro usuario del sistema.', 'index.php?controller=paciente&action=crear');
         }
 
-        $db = new Database();
-        $conn = $db->conectar();
+        $conn = (new Database())->conectar();
 
         try {
             $conn->beginTransaction();
-
             $stmt = $conn->prepare("INSERT INTO pacientes (nombre, apellido, cedula, telefono, email, fecha_nacimiento)
                                     VALUES (:nombre, :apellido, :cedula, :telefono, :email, :fecha_nacimiento)");
             $stmt->execute([
@@ -113,29 +128,19 @@ class PacienteController {
             ]);
 
             $pacienteId = (int)$conn->lastInsertId();
-            $passwordTemporal = 'Pac' . rand(1000, 9999) . '!';
-
-            $stmtUsuario = $conn->prepare("INSERT INTO usuarios (nombre, email, password, rol, medico_id, paciente_id, estado)
-                                           VALUES (:nombre, :email, :password, 'paciente', NULL, :paciente_id, 'activo')");
-            $stmtUsuario->execute([
-                ':nombre' => $data['nombre'] . ' ' . $data['apellido'],
-                ':email' => $data['email'],
-                ':password' => password_hash($passwordTemporal, PASSWORD_DEFAULT),
-                ':paciente_id' => $pacienteId,
-            ]);
+            $passwordTemporal = $this->accountService->crearCuentaVinculada($data, 'paciente', $pacienteId, $conn);
+            
+            // AUDITORÍA: Registro de creación
+            $this->registrarLog('INSERT', "Nuevo paciente creado: {$data['nombre']} {$data['apellido']} (ID: $pacienteId)");
 
             $conn->commit();
 
-            flash('success', "Paciente registrado. Usuario: {$data['email']} | Contraseña temporal: {$passwordTemporal}");
-            header("Location: index.php?controller=paciente&action=index");
-            exit;
+            $this->redirectWithFlash('success', "Paciente registrado. Usuario: {$data['email']} | Contraseña temporal: {$passwordTemporal} | Debe cambiarla al iniciar sesión.", 'index.php?controller=paciente&action=index');
         } catch (Throwable $e) {
             if ($conn->inTransaction()) {
                 $conn->rollBack();
             }
-            flash('error', 'No se pudo registrar el paciente. Verifica que el correo y la cédula no estén duplicados.');
-            header("Location: index.php?controller=paciente&action=crear");
-            exit;
+            $this->redirectWithFlash('error', 'No se pudo registrar el paciente. Verifica que el correo y la cédula no estén duplicados.', 'index.php?controller=paciente&action=crear');
         }
     }
 
@@ -143,72 +148,74 @@ class PacienteController {
         require_roles(['admin', 'recepcion']);
         $id = (int)($_GET['id'] ?? 0);
         $paciente = $this->paciente->obtenerPorId($id);
-        if (!$paciente) { flash('error', 'Paciente no encontrado.'); header("Location: index.php?controller=paciente&action=index"); exit; }
-        require_once __DIR__ . '/../views/pacientes/editar.php';
+        if (!$paciente) {
+            $this->redirectWithFlash('error', 'Paciente no encontrado.', 'index.php?controller=paciente&action=index');
+        }
+        $this->render('pacientes/editar', compact('paciente'));
     }
 
     public function actualizar(){
         require_roles(['admin', 'recepcion']);
-        if($_SERVER['REQUEST_METHOD'] !== 'POST'){
-            header("Location: index.php?controller=paciente&action=index"); exit;
-        }
+        $this->ensurePost('index.php?controller=paciente&action=index');
 
         $id = (int)($_POST['id'] ?? 0);
         $pacienteActual = $this->paciente->obtenerPorId($id);
         if (!$pacienteActual) {
-            flash('error', 'Paciente no encontrado.');
-            header("Location: index.php?controller=paciente&action=index");
-            exit;
+            $this->redirectWithFlash('error', 'Paciente no encontrado.', 'index.php?controller=paciente&action=index');
         }
-
+        
         $data = $this->payloadFromRequest();
         $error = $this->validate($data, $id);
         if ($error) {
-            flash('error', $error);
-            header("Location: index.php?controller=paciente&action=editar&id={$id}");
-            exit;
+            $this->redirectWithFlash('error', $error, "index.php?controller=paciente&action=editar&id={$id}");
         }
-
-        $usuario = $this->usuario->obtenerPorPacienteId($id);
-        if ($usuario && $this->usuario->emailEnUsoPorOtro($data['email'], (int)$usuario['id'])) {
-            flash('error', 'Ese correo ya está siendo usado por otro usuario del sistema.');
-            header("Location: index.php?controller=paciente&action=editar&id={$id}");
-            exit;
+      
+        $usuario = $this->accountService->obtenerUsuarioVinculado('paciente', $id);
+          
+        if ($usuario && !$this->accountService->emailDisponible($data['email'], (int)$usuario['id'])) {
+            $this->redirectWithFlash('error', 'Ese correo ya está siendo usado por otro usuario.', "index.php?controller=paciente&action=editar&id={$id}");
         }
-
-        $resultado = $this->paciente->actualizar($id, $data);
-        if (!$resultado) {
-            flash('error', 'No se pudo actualizar el paciente.');
-            header("Location: index.php?controller=paciente&action=editar&id={$id}");
-            exit;
+        
+        if (!$this->paciente->actualizar($id, $data)) {
+            $this->redirectWithFlash('error', 'No se pudo actualizar los datos personales.', "index.php?controller=paciente&action=editar&id={$id}");
         }
-
+    
         if ($usuario) {
-            $nombreCompleto = $data['nombre'] . ' ' . $data['apellido'];
-            $this->usuario->actualizarDatosPorPacienteId($id, $nombreCompleto, $data['email']);
+            $this->accountService->actualizarCuentaVinculada('paciente', $id, $this->fullName($data), $data['email']);
+            
+            // AUDITORÍA: Actualización
+            $this->registrarLog('UPDATE', "Se actualizaron datos del paciente: {$data['nombre']} {$data['apellido']} (ID: $id)");
 
             if (!empty($_POST['reset_password'])) {
-                $newPass = 'Pac' . rand(1000, 9999) . '!';
-                $this->usuario->actualizarPassword($usuario['id'], password_hash($newPass, PASSWORD_DEFAULT));
-                flash('success', "Paciente actualizado. Nueva contraseña temporal: {$newPass}");
-                header("Location: index.php?controller=paciente&action=index");
-                exit;
+                $newPass = $this->accountService->reiniciarPasswordTemporal((int)$usuario['id'], 'paciente');
+                $this->registrarLog('UPDATE', "Password reseteado para paciente ID: $id");
+                $this->redirectWithFlash('success', "Datos actualizados. Nueva clave temporal generada: {$newPass}", 'index.php?controller=paciente&action=index');
             }
+        } else {
+            $newPass = $this->accountService->crearCuentaVinculada($data, 'paciente', $id);
+            $this->registrarLog('INSERT', "Se creó cuenta de acceso para paciente ID: $id");
+            $this->redirectWithFlash('success', "Paciente actualizado y cuenta de acceso CREADA. Clave temporal: <b>{$newPass}</b>", 'index.php?controller=paciente&action=index');
         }
 
-        flash('success', 'Paciente actualizado correctamente.');
-        header("Location: index.php?controller=paciente&action=index"); exit;
+        $this->redirectWithFlash('success', 'Paciente actualizado correctamente.', 'index.php?controller=paciente&action=index');
     }
 
     public function eliminar(){
         require_roles(['admin', 'recepcion']);
         $id = (int)($_GET['id'] ?? 0);
         if ($id) {
-            $this->usuario->eliminarPorPacienteId($id);
-            $this->paciente->eliminar($id);
-            flash('success', 'Paciente eliminado correctamente.');
+            $p = $this->paciente->obtenerPorId($id); // Obtenemos datos antes de desactivar para el log
+            
+            $this->accountService->eliminarCuentaVinculada('paciente', $id);
+            $this->paciente->desactivar($id);
+
+            // AUDITORÍA: Eliminación (Desactivación)
+            $nombreComp = $p ? $p['nombre'].' '.$p['apellido'] : "ID: $id";
+            $this->registrarLog('DELETE', "Se deshabilitó al paciente: $nombreComp");
+
+            flash('success', 'Paciente Deshabilitado correctamente, Su historial de citas se ha preservado.');
         }
-        header("Location: index.php?controller=paciente&action=index"); exit;
+        $this->redirect('index.php?controller=paciente&action=index');
     }
 
     public function perfil(){
@@ -217,9 +224,7 @@ class PacienteController {
         $paciente = $this->paciente->obtenerPorId($id);
 
         if (!$paciente) {
-            flash('error', 'No se encontró el perfil del paciente.');
-            header("Location: index.php?controller=dashboard&action=index");
-            exit;
+            $this->redirectWithFlash('error', 'No se encontró el perfil del paciente.', 'index.php?controller=dashboard&action=index');
         }
 
         $citaModel = new Cita();
@@ -227,6 +232,6 @@ class PacienteController {
         $proximasCitas = $citaModel->proximasPorPaciente($id, 3);
         $historial = $historialModel->obtenerPorPaciente($id);
 
-        require_once __DIR__ . '/../views/pacientes/perfil.php';
+        $this->render('pacientes/perfil', compact('paciente', 'proximasCitas', 'historial'));
     }
 }

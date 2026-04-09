@@ -1,11 +1,13 @@
 <?php
 
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/Cita.php';
 require_once __DIR__ . '/../models/Paciente.php';
 require_once __DIR__ . '/../models/Medico.php';
+require_once __DIR__ . '/../helpers/Notifier.php';
 
-class CitaController {
+class CitaController extends Controller {
     private $cita;
 
     public function __construct(){
@@ -13,27 +15,21 @@ class CitaController {
     }
 
     private function notify($tipo, $cita){
-        $logDir = __DIR__ . '/../logs';
-        if (!is_dir($logDir)) mkdir($logDir, 0777, true);
-        $asunto = '';
-        $mensaje = '';
-        if ($tipo === 'creada') {
-            $asunto = 'Nueva cita médica';
-            $mensaje = "Hola {$cita['paciente']}, su cita quedó programada para el {$cita['fecha']} de {$cita['hora_inicio']} a {$cita['hora_fin']} con {$cita['medico']}. Estado: {$cita['estado']}";
-        } elseif ($tipo === 'actualizada') {
-            $asunto = 'Cita médica actualizada';
-            $mensaje = "Hola {$cita['paciente']}, su cita fue actualizada para el {$cita['fecha']} de {$cita['hora_inicio']} a {$cita['hora_fin']} con {$cita['medico']}. Estado: {$cita['estado']}";
-        } elseif ($tipo === 'cancelada') {
-            $asunto = 'Cita médica cancelada';
-            $mensaje = "Hola {$cita['paciente']}, su cita del {$cita['fecha']} con {$cita['medico']} fue cancelada.";
-        } elseif ($tipo === 'completada') {
-            $asunto = 'Cita médica completada';
-            $mensaje = "Hola {$cita['paciente']}, su cita del {$cita['fecha']} con {$cita['medico']} fue marcada como completada.";
+        if (!$cita || empty($cita['email'])) {
+            return;
         }
-        $line = '['.date('Y-m-d H:i:s')."] {$asunto} | PARA: {$cita['paciente_email']} | TEL: {$cita['paciente_telefono']} | {$mensaje}\n";
-        file_put_contents($logDir . '/notificaciones.log', $line, FILE_APPEND);
-        if (!empty($cita['paciente_email'])) {
-            @mail($cita['paciente_email'], $asunto, $mensaje);
+
+        $asunto = "Notificación de cita médica";
+        $mensaje = match ($tipo) {
+            'creada' => "Hola {$cita['paciente']}, tu cita ha sido creada para el {$cita['fecha']} a las {$cita['hora_inicio']} con {$cita['medico']}",
+            'actualizada' => "Hola {$cita['paciente']}, tu cita ha sido actualizada: {$cita['fecha']} a las {$cita['hora_inicio']} con {$cita['medico']}",
+            'completada' => "Hola {$cita['paciente']}, tu cita del {$cita['fecha']} con {$cita['medico']} fue marcada como completada.",
+            'cancelada' => "Hola {$cita['paciente']}, tu cita del {$cita['fecha']} con {$cita['medico']} fue cancelada.",
+            default => null,
+        };
+
+        if ($mensaje) {
+            Notifier::enviarCorreo($cita['email'], $asunto, $mensaje);
         }
     }
 
@@ -51,6 +47,61 @@ class CitaController {
         ];
     }
 
+    private function buildPacienteData(){
+        $horaInicio = $_POST['hora_inicio'] ?? '';
+        $horaFin = date('H:i:s', strtotime($horaInicio . ' +30 minutes'));
+        return [
+            'paciente_id' => (int)current_paciente_id(),
+            'medico_id' => (int)($_POST['medico_id'] ?? 0),
+            'fecha' => $_POST['fecha'] ?? '',
+            'hora_inicio' => $horaInicio,
+            'hora_fin' => $horaFin,
+            'motivo' => trim($_POST['motivo'] ?? ''),
+            'estado' => 'pendiente',
+        ];
+    }
+
+    private function validateData(array $data, $checkPastDateTime = true){
+        if(!$data['paciente_id'] || !$data['medico_id'] || $data['fecha'] === '' || $data['hora_inicio'] === ''){
+            return 'Debes completar paciente, médico, fecha y hora.';
+        }
+
+        if(!preg_match('/^\d{4}-\d{2}-\d{2}$/', $data['fecha'])){
+            return 'La fecha ingresada no es válida.';
+        }
+
+        if(!preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $data['hora_inicio'])){
+            return 'La hora ingresada no es válida.';
+        }
+
+        $dateTime = strtotime($data['fecha'] . ' ' . $data['hora_inicio']);
+        if ($dateTime === false) {
+            return 'La fecha y hora de la cita no son válidas.';
+        }
+
+        if ($checkPastDateTime) {
+            if(strtotime($data['fecha']) < strtotime(date('Y-m-d'))){
+                return 'No se pueden crear citas en fechas pasadas.';
+            }
+
+            if ($dateTime < time()) {
+                return 'No se pueden registrar citas en un horario pasado.';
+            }
+        }
+
+        if(strlen($data['motivo']) > 250){
+            return 'El motivo no puede superar 250 caracteres.';
+        }
+
+        return null;
+    }
+
+    private function createRedirectUrl(){
+        return current_user_role() === 'paciente'
+            ? 'index.php?controller=cita&action=crearPaciente'
+            : 'index.php?controller=cita&action=crear';
+    }
+
     public function index(){
         require_login();
         if (current_user_role() === 'medico') {
@@ -60,6 +111,7 @@ class CitaController {
         } else {
             $citas = $this->cita->obtenerTodas();
         }
+        $this->logActivity('VIEW', 'citas', 'Consultó el listado de citas.');
         require_once __DIR__ . '/../views/citas/index.php';
     }
 
@@ -72,32 +124,75 @@ class CitaController {
         require_once __DIR__ . '/../views/citas/crear.php';
     }
 
+    public function crearPaciente(){
+        require_roles(['paciente']);
+        $pacienteModel = new Paciente();
+        $medicoModel = new Medico();
+        $paciente = $pacienteModel->obtenerPorId((int)current_paciente_id());
+
+        if (!$paciente) {
+            flash('error', 'No se encontró tu perfil de paciente para agendar la cita.');
+            header("Location: index.php?controller=dashboard&action=index");
+            exit;
+        }
+
+        $medicos = $medicoModel->obtenerTodos();
+        require_once __DIR__ . '/../views/citas/crear_paciente.php';
+    }
+
     public function guardar(){
         require_roles(['admin', 'recepcion']);
         if($_SERVER['REQUEST_METHOD'] !== 'POST'){
             header("Location: index.php?controller=cita&action=index"); exit;
         }
         $data = $this->buildData();
-        if(!$data['paciente_id'] || !$data['medico_id'] || $data['fecha'] === '' || $data['hora_inicio'] === ''){
-            flash('error', 'Debes completar paciente, médico, fecha y hora.');
-            header("Location: index.php?controller=cita&action=crear"); exit;
-        }
-        if(strtotime($data['fecha']) < strtotime(date('Y-m-d'))){
-            flash('error', 'No se pueden crear citas en fechas pasadas.');
-            header("Location: index.php?controller=cita&action=crear"); exit;
-        }
-        if(strlen($data['motivo']) > 250){
-            flash('error', 'El motivo no puede superar 250 caracteres.');
-            header("Location: index.php?controller=cita&action=crear"); exit;
+        $error = $this->validateData($data, true);
+        if($error){
+            flash('error', $error);
+            header("Location: " . $this->createRedirectUrl()); exit;
         }
         $res = $this->cita->crear($data);
         if ($res === 'ocupado') {
             flash('error', 'El médico ya tiene una cita en ese horario.');
-            header("Location: index.php?controller=cita&action=crear"); exit;
+            header("Location: " . $this->createRedirectUrl()); exit;
         }
         $cita = $this->cita->obtenerPorId($res);
         $this->notify('creada', $cita);
+        $this->logActivity('INSERT', 'citas', 'Creó la cita ID ' . $res . ' para paciente ' . ($cita['paciente'] ?? ('ID ' . $data['paciente_id'])) . ' con ' . ($cita['medico'] ?? ('médico ID ' . $data['medico_id'])) . '.');
         flash('success', 'Cita registrada y paciente notificado. Revisa app/logs/notificaciones.log');
+        header("Location: index.php?controller=cita&action=index"); exit;
+    }
+
+    public function guardarPaciente(){
+        require_roles(['paciente']);
+        if($_SERVER['REQUEST_METHOD'] !== 'POST'){
+            header("Location: index.php?controller=cita&action=index"); exit;
+        }
+
+        $pacienteModel = new Paciente();
+        $paciente = $pacienteModel->obtenerPorId((int)current_paciente_id());
+        if (!$paciente) {
+            flash('error', 'No se encontró tu perfil de paciente para agendar la cita.');
+            header("Location: index.php?controller=dashboard&action=index"); exit;
+        }
+
+        $data = $this->buildPacienteData();
+        $error = $this->validateData($data, true);
+        if($error){
+            flash('error', $error);
+            header("Location: index.php?controller=cita&action=crearPaciente"); exit;
+        }
+
+        $res = $this->cita->crear($data);
+        if ($res === 'ocupado') {
+            flash('error', 'El médico ya tiene una cita en ese horario.');
+            header("Location: index.php?controller=cita&action=crearPaciente"); exit;
+        }
+
+        $cita = $this->cita->obtenerPorId($res);
+        $this->notify('creada', $cita);
+        $this->logActivity('INSERT', 'citas', 'El paciente agendó su propia cita ID ' . $res . ' con ' . ($cita['medico'] ?? ('médico ID ' . $data['medico_id'])) . '.');
+        flash('success', 'Tu cita fue agendada correctamente.');
         header("Location: index.php?controller=cita&action=index"); exit;
     }
 
@@ -117,6 +212,11 @@ class CitaController {
         require_roles(['admin', 'recepcion']);
         $id = (int)($_POST['id'] ?? 0);
         $data = $this->buildData();
+        $error = $this->validateData($data, false);
+        if($error){
+            flash('error', $error);
+            header("Location: index.php?controller=cita&action=editar&id={$id}"); exit;
+        }
         $res = $this->cita->actualizar($id, $data);
         if ($res === 'ocupado') {
             flash('error', 'El médico ya tiene una cita en ese horario.');
@@ -124,6 +224,7 @@ class CitaController {
         }
         $cita = $this->cita->obtenerPorId($id);
         $this->notify('actualizada', $cita);
+        $this->logActivity('UPDATE', 'citas', 'Actualizó la cita ID ' . $id . ' a ' . ($cita['fecha'] ?? $data['fecha']) . ' ' . ($cita['hora_inicio'] ?? $data['hora_inicio']) . '.');
         flash('success', 'Cita actualizada y paciente notificado.');
         header("Location: index.php?controller=cita&action=index"); exit;
     }
@@ -144,7 +245,9 @@ class CitaController {
             header("Location: index.php?controller=cita&action=index"); exit;
         }
         $this->cita->actualizarEstado($id, 'completada');
-        $this->notify('completada', $this->cita->obtenerPorId($id));
+        $citaActualizada = $this->cita->obtenerPorId($id);
+        $this->notify('completada', $citaActualizada);
+        $this->logActivity('UPDATE', 'citas', 'Marcó como completada la cita ID ' . $id . '.');
         flash('success', 'La cita fue marcada como completada.');
         header("Location: index.php?controller=cita&action=index"); exit;
     }
@@ -166,7 +269,9 @@ class CitaController {
         }
 
         $this->cita->actualizarEstado($id, 'cancelada');
-        $this->notify('cancelada', $this->cita->obtenerPorId($id));
+        $citaActualizada = $this->cita->obtenerPorId($id);
+        $this->notify('cancelada', $citaActualizada);
+        $this->logActivity('DELETE', 'citas', 'Canceló la cita ID ' . $id . '.');
         flash('info', 'La cita fue cancelada y el paciente fue notificado.');
         header("Location: index.php?controller=cita&action=index"); exit;
     }
@@ -176,6 +281,7 @@ class CitaController {
         $id = (int)($_GET['id'] ?? 0);
         if ($id) {
             $this->cita->eliminar($id);
+            $this->logActivity('DELETE', 'citas', 'Eliminó la cita ID ' . $id . '.');
             flash('success', 'La cita fue eliminada correctamente.');
         }
         header("Location: index.php?controller=cita&action=index"); exit;

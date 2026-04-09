@@ -1,9 +1,10 @@
 <?php
 
 require_once __DIR__ . '/../middleware/auth.php';
+require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/Reporte.php';
 
-class ReporteController
+class ReporteController extends Controller
 {
     public function index()
     {
@@ -46,6 +47,8 @@ class ReporteController
         $diagnosticoMasFrecuente = $reporteModel->diagnosticoMasFrecuente();
         $medicoMasActivo = $reporteModel->medicoMasActivo();
         $pacienteMasConsultas = $reporteModel->pacienteMasConsultas();
+
+        $this->logActivity('VIEW', 'reportes', 'Consultó el módulo de reportes.');
 
         require_once __DIR__ . '/../views/reportes/index.php';
     }

@@ -12,6 +12,10 @@
             <a href="index.php?controller=cita&action=crear" class="btn btn-primary">
                 <i class="fa-solid fa-plus"></i> Nueva cita
             </a>
+        <?php elseif (current_user_role() === 'paciente'): ?>
+            <a href="index.php?controller=cita&action=crearPaciente" class="btn btn-primary">
+                <i class="fa-solid fa-calendar-plus"></i> Agendar cita
+            </a>
         <?php endif; ?>
     </div>
 

@@ -1,5 +1,5 @@
 <?php require_once __DIR__ . '/../layout/header.php'; ?>
-<div class="form-card"><div class="form-header"><div><h2>Nuevo paciente</h2><p style="margin:6px 0 0;color:#6b7280;">Al guardar, el sistema creará automáticamente su usuario con rol paciente.</p></div><a href="index.php?controller=paciente&action=index" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Volver</a></div>
+<div class="form-card"><div class="form-header"><div><h2>Nuevo paciente</h2><p style="margin:6px 0 0;color:#6b7280;">Al guardar, el sistema creará automáticamente su usuario con rol paciente y una contraseña temporal que deberá cambiar en su primer ingreso.</p></div><a href="index.php?controller=paciente&action=index" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Volver</a></div>
 <form method="POST" action="index.php?controller=paciente&action=guardar"><div class="form-grid">
 <div class="form-group"><label>Nombre</label><input type="text" name="nombre" data-only-letters required></div>
 <div class="form-group"><label>Apellido</label><input type="text" name="apellido" data-only-letters required></div>

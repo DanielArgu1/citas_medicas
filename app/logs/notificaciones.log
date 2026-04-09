@@ -10,3 +10,6 @@
 [2026-03-11 01:02:03] Cita médica completada | PARA: jose.hernandez@email.com | TEL: 9876-5435 | Hola José Hernández, su cita del 2026-03-11 con Roberto Flores fue marcada como completada.
 [2026-03-11 01:03:23] Cita médica cancelada | PARA: maria.gonzalez@email.com | TEL: 9876-5432 | Hola María González, su cita del 2026-03-10 con Roberto Flores fue cancelada.
 [2026-03-17 00:12:40] Cita médica cancelada | PARA: carlos.martinez@email.com | TEL: 9876-5433 | Hola Carlos Martínez, su cita del 2026-03-10 con Patricia Sánchez fue cancelada.
+[2026-04-02 04:43:05] Nueva cita médica | PARA: maria.gonzalez@email.com | TEL: 9876-5432 | Hola María González, su cita quedó programada para el 2026-04-16 de 14:40:00 a 15:10:00 con Miguel Ramírez. Estado: pendiente
+[2026-04-02 04:44:14] Cita médica cancelada | PARA: maria.gonzalez@email.com | TEL: 9876-5432 | Hola María González, su cita del 2026-04-16 con Miguel Ramírez fue cancelada.
+[2026-04-08 23:30:38] Cita médica cancelada | PARA: laura.rodriguez@email.com | TEL: 9876-5436 | Hola Laura Rodríguez, su cita del 2026-04-03 con Patricia Sánchez fue cancelada.

@@ -1,0 +1,205 @@
+.hc-page{
+        display:flex;
+        flex-direction:column;
+        gap:24px;
+    }
+
+    .hc-header{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:16px;
+        flex-wrap:wrap;
+    }
+
+    .hc-title-wrap h2{
+        margin:0;
+        font-size:28px;
+        font-weight:800;
+        color:#0f172a;
+    }
+
+    .hc-title-wrap p{
+        margin:6px 0 0;
+        color:#64748b;
+        font-size:14px;
+    }
+
+    .hc-layout{
+        display:grid;
+        grid-template-columns: 380px 1fr;
+        gap:22px;
+        align-items:start;
+    }
+
+    .hc-card{
+        background:#ffffff;
+        border:1px solid #e5e7eb;
+        border-radius:20px;
+        box-shadow:0 12px 30px rgba(15,23,42,.08);
+        overflow:hidden;
+    }
+
+    .hc-card-head{
+        padding:20px 22px 14px;
+        border-bottom:1px solid #eef2f7;
+        background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
+    }
+
+    .hc-card-head h3{
+        margin:0;
+        font-size:18px;
+        font-weight:700;
+        color:#0f172a;
+        display:flex;
+        align-items:center;
+        gap:10px;
+    }
+
+    .hc-card-head p{
+        margin:8px 0 0;
+        font-size:14px;
+        color:#64748b;
+    }
+
+    .hc-form{
+        padding:20px 22px 22px;
+    }
+
+    .hc-form-group{
+        margin-bottom:16px;
+    }
+
+    .hc-form-group label{
+        display:block;
+        margin-bottom:8px;
+        font-size:14px;
+        font-weight:700;
+        color:#1e293b;
+    }
+
+    .hc-form-group textarea{
+        width:100%;
+        min-height:95px;
+        resize:vertical;
+        border:1px solid #dbe3ee;
+        border-radius:14px;
+        padding:12px 14px;
+        font-size:14px;
+        color:#0f172a;
+        background:#fff;
+        outline:none;
+        transition:.2s ease;
+        box-sizing:border-box;
+    }
+
+    .hc-form-group textarea:focus{
+        border-color:#2563eb;
+        box-shadow:0 0 0 4px rgba(37,99,235,.12);
+    }
+
+    .hc-btn-full{
+        width:100%;
+        display:inline-flex;
+        justify-content:center;
+        align-items:center;
+        gap:8px;
+    }
+
+    .hc-timeline{
+        padding:20px;
+        display:flex;
+        flex-direction:column;
+        gap:16px;
+    }
+
+    .hc-item{
+        border:1px solid #e7edf5;
+        background:#fbfdff;
+        border-radius:18px;
+        padding:18px;
+        transition:.2s ease;
+    }
+
+    .hc-item-top{
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:12px;
+        flex-wrap:wrap;
+        margin-bottom:14px;
+    }
+
+    .hc-item-top h4{
+        margin:0 0 8px;
+        font-size:17px;
+        font-weight:800;
+        color:#0f172a;
+    }
+
+    .hc-pill{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        background:#eef4ff;
+        color:#31528f;
+        border-radius:999px;
+        padding:7px 11px;
+        font-size:13px;
+        font-weight:600;
+    }
+
+    .hc-date{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        background:#f8fafc;
+        border:1px solid #e2e8f0;
+        color:#64748b;
+        border-radius:999px;
+        padding:7px 11px;
+        font-size:13px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .hc-blocks{
+        display:grid;
+        gap:12px;
+    }
+
+    .hc-block{
+        background:#fff;
+        border:1px solid #edf2f7;
+        border-radius:14px;
+        padding:12px 14px;
+    }
+
+    .hc-label{
+        display:block;
+        margin-bottom:7px;
+        font-size:12px;
+        font-weight:800;
+        text-transform:uppercase;
+        letter-spacing:.05em;
+        color:#2563eb;
+    }
+
+    .hc-block p{
+        margin:0;
+        line-height:1.6;
+        font-size:14px;
+        color:#1f2937;
+    }
+
+    .hc-empty{
+        padding:30px 22px;
+        text-align:center;
+        color:#64748b;
+    }
+
+    @media (max-width: 1100px){
+        .hc-layout{
+            grid-template-columns:1fr;
+        }
+    }

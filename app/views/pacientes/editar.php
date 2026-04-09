@@ -7,6 +7,6 @@
 <div class="form-group"><label>Teléfono</label><input type="text" name="telefono" maxlength="9" data-mask="telefono" value="<?= htmlspecialchars($paciente['telefono']) ?>"></div>
 <div class="form-group"><label>Correo electrónico</label><input type="email" name="email" value="<?= htmlspecialchars($paciente['email']) ?>" required></div>
 <div class="form-group"><label>Fecha de nacimiento</label><input type="date" name="fecha_nacimiento" value="<?= htmlspecialchars($paciente['fecha_nacimiento']) ?>"></div>
-<div class="form-group full"><label><input type="checkbox" name="reset_password" value="1"> Generar nueva contraseña temporal para el paciente</label></div>
+<div class="form-group full"><label><input type="checkbox" name="reset_password" value="1"> Generar nueva contraseña temporal para el paciente y obligarlo a cambiarla en el siguiente ingreso</label></div>
 </div><div class="form-actions"><button class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Actualizar paciente</button></div></form></div>
 <?php require_once __DIR__ . '/../layout/footer.php'; ?>

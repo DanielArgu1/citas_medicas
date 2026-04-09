@@ -30,8 +30,10 @@
                 <a class="btn btn-secondary" href="index.php?controller=paciente&action=editar&id=<?= $p['id'] ?>">
                     <i class="fa-solid fa-pen"></i>
                 </a>
-                <a class="btn btn-danger" href="index.php?controller=paciente&action=eliminar&id=<?= $p['id'] ?>" data-confirm="¿Eliminar este paciente?">
-                    <i class="fa-solid fa-rotate"></i>
+                <a class="btn btn-warning" 
+                    href="index.php?controller=paciente&action=eliminar&id=<?= $p['id'] ?>" 
+                    data-confirm="¿Está seguro de que desea DESHABILITAR a este paciente? El registro pasará a estado Inactivo pero se conservará su historial clínico.">
+                        <i class="fa-solid fa-toggle-off"></i>
                 </a>
             </div>
         </td>
@@ -39,5 +41,9 @@
     <?php endforeach; ?>
     </tbody></table></div>
     <?php else: ?><div class="empty-box"><p>No hay pacientes registrados.</p></div><?php endif; ?>
+        
 </div>
+
+
 <?php require_once __DIR__ . '/../layout/footer.php'; ?>
+

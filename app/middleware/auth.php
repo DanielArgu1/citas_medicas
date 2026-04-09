@@ -32,6 +32,30 @@ function current_paciente_id()
     return $_SESSION['paciente_id'] ?? null;
 }
 
+function must_change_password()
+{
+    return !empty($_SESSION['debe_cambiar_password']);
+}
+
+function enforce_password_change($controller, $action)
+{
+    if (!isset($_SESSION['usuario_id']) || !must_change_password()) {
+        return;
+    }
+
+    $allowedRoutes = [
+        'auth' => ['cambiarPassword', 'actualizarPassword', 'logout'],
+    ];
+
+    if (isset($allowedRoutes[$controller]) && in_array($action, $allowedRoutes[$controller], true)) {
+        return;
+    }
+
+    $_SESSION['info'] = 'Debes cambiar tu contraseña temporal para usar el sistema.';
+    header("Location: index.php?controller=auth&action=cambiarPassword");
+    exit;
+}
+
 function require_roles(array $roles)
 {
     require_login();

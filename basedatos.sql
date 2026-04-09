@@ -37,6 +37,7 @@ CREATE TABLE usuarios (
     medico_id INT NULL,
     paciente_id INT NULL,
     estado ENUM('activo','inactivo') NOT NULL DEFAULT 'activo',
+    debe_cambiar_password TINYINT(1) NOT NULL DEFAULT 0,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_usuario_medico FOREIGN KEY (medico_id) REFERENCES medicos(id) ON DELETE SET NULL,
     CONSTRAINT fk_usuario_paciente FOREIGN KEY (paciente_id) REFERENCES pacientes(id) ON DELETE SET NULL
@@ -91,14 +92,14 @@ INSERT INTO medicos (id, nombre, apellido, especialidad, telefono, email) VALUES
 (2, 'Patricia', 'Sánchez', 'Pediatría', '2234-5679', 'dra.sanchez@hospital.com'),
 (3, 'Miguel', 'Ramírez', 'Cardiología', '2234-5680', 'dr.ramirez@hospital.com');
 
-INSERT INTO usuarios (nombre, email, password, rol, medico_id, paciente_id, estado) VALUES
-('Administrador General', 'admin@admin.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'admin', NULL, NULL, 'activo'),
-('Recepción Clínica', 'recepcion@clinica.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'recepcion', NULL, NULL, 'activo'),
-('Roberto Flores', 'dr.flores@hospital.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'medico', 1, NULL, 'activo'),
-('Patricia Sánchez', 'dra.sanchez@hospital.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'medico', 2, NULL, 'activo'),
-('Miguel Ramírez', 'dr.ramirez@hospital.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'medico', 3, NULL, 'activo'),
-('María González', 'maria.gonzalez@email.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'paciente', NULL, 1, 'activo'),
-('Carlos Martínez', 'carlos.martinez@email.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'paciente', NULL, 2, 'activo');
+INSERT INTO usuarios (nombre, email, password, rol, medico_id, paciente_id, estado, debe_cambiar_password) VALUES
+('Administrador General', 'admin@admin.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'admin', NULL, NULL, 'activo', 0),
+('Recepción Clínica', 'recepcion@clinica.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'recepcion', NULL, NULL, 'activo', 0),
+('Roberto Flores', 'dr.flores@hospital.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'medico', 1, NULL, 'activo', 1),
+('Patricia Sánchez', 'dra.sanchez@hospital.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'medico', 2, NULL, 'activo', 1),
+('Miguel Ramírez', 'dr.ramirez@hospital.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'medico', 3, NULL, 'activo', 1),
+('María González', 'maria.gonzalez@email.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'paciente', NULL, 1, 'activo', 1),
+('Carlos Martínez', 'carlos.martinez@email.com', '$2y$12$BRqZHXxJT43DaW3Pn8wLy.tFjO.voeHj5SNZG.MvrNSu4N6mxVtrS', 'paciente', NULL, 2, 'activo', 1);
 
 INSERT INTO citas (paciente_id, medico_id, fecha, hora_inicio, hora_fin, motivo, estado) VALUES
 (1, 1, CURDATE(), '09:00:00', '09:30:00', 'Control de rutina', 'pendiente'),
@@ -131,3 +132,36 @@ VALUES
 (3, 2, NULL, 'Dolor de oído', 'Molestia en oído derecho, fiebre leve', 'Otitis media', 'Amoxicilina 500 mg cada 8 horas por 7 días', 'Mantener control si persiste dolor', NOW()),
 (4, 1, NULL, 'Insomnio', 'Dificultad para dormir, cansancio diurno', 'Trastorno leve del sueño', 'Higiene del sueño y control en 2 semanas', 'Evitar uso de pantallas en la noche', NOW()),
 (5, 3, NULL, 'Dolor de cabeza y mareo', 'Cefalea frontal, mareo leve', 'Cefalea tensional', 'Ibuprofeno 400 mg cada 8 horas por 3 días', 'Reducir estrés y descansar mejor', NOW());
+
+
+ALTER TABLE pacientes ADD COLUMN estado ENUM('activo', 'inactivo') DEFAULT 'activo';
+ALTER TABLE medicos ADD COLUMN estado ENUM('activo', 'inactivo') DEFAULT 'activo';
+
+CREATE TABLE auditoria (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    accion VARCHAR(100) NOT NULL, 
+    tabla_afectada VARCHAR(50) NOT NULL, 
+    detalles TEXT, 
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);
+
+/* Limpiamos la tabla primero para que no haya basura */
+TRUNCATE TABLE auditoria;
+
+/* Insertamos logs realistas usando los IDs de tu tabla usuarios */
+INSERT INTO auditoria (usuario_id, accion, tabla_afectada, detalles, fecha) VALUES
+(1, 'LOGIN', 'usuarios', 'Inicio de sesión exitoso: Administrador General', DATE_SUB(NOW(), INTERVAL 8 HOUR)),
+(1, 'INSERT', 'medicos', 'Se registró al Dr. Miguel Ramírez en Cardiología', DATE_SUB(NOW(), INTERVAL 7 HOUR)),
+(2, 'LOGIN', 'usuarios', 'Inicio de sesión exitoso: Recepción Clínica', DATE_SUB(NOW(), INTERVAL 6 HOUR)),
+(2, 'INSERT', 'pacientes', 'Nuevo registro: María González (Cédula: 0801-1990-12345)', DATE_SUB(NOW(), INTERVAL 5 HOUR)),
+(2, 'INSERT', 'citas', 'Cita programada: Paciente ID 1 con Médico ID 1', DATE_SUB(NOW(), INTERVAL 5 HOUR)),
+(1, 'UPDATE', 'usuarios', 'Cambio de rol: Usuario "Patricia Sánchez" actualizado a Médico', DATE_SUB(NOW(), INTERVAL 4 HOUR)),
+(2, 'UPDATE', 'pacientes', 'Actualización de teléfono para el paciente Carlos Martínez', DATE_SUB(NOW(), INTERVAL 3 HOUR)),
+(3, 'LOGIN', 'usuarios', 'Inicio de sesión exitoso: Dr. Roberto Flores', DATE_SUB(NOW(), INTERVAL 2 HOUR)),
+(3, 'INSERT', 'historial_clinico', 'Diagnóstico agregado para María González: Migraña severa', DATE_SUB(NOW(), INTERVAL 1 HOUR)),
+(2, 'UPDATE', 'citas', 'Cita ID 3 marcada como COMPLETADA', DATE_SUB(NOW(), INTERVAL 45 MINUTE)),
+(1, 'UPDATE', 'medicos', 'Dr. Miguel Ramírez actualizado a estado ACTIVO', DATE_SUB(NOW(), INTERVAL 30 MINUTE)),
+(2, 'DELETE', 'citas', 'Se canceló la cita ID 15 por solicitud del paciente', DATE_SUB(NOW(), INTERVAL 15 MINUTE)),
+(1, 'UPDATE', 'usuarios', 'Reset de contraseña para usuario: mary.gonzalez@email.com', DATE_SUB(NOW(), INTERVAL 5 MINUTE));

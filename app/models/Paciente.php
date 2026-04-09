@@ -4,11 +4,13 @@ require_once __DIR__ . '/../core/Model.php';
 
 class Paciente extends Model {
 
-    public function obtenerTodos(){
+   public function obtenerTodos(){
         $sql = "SELECT p.*, u.id AS usuario_id, u.estado AS usuario_estado
                 FROM pacientes p
                 LEFT JOIN usuarios u ON u.paciente_id = p.id AND u.rol = 'paciente'
+                WHERE p.estado = 'activo' 
                 ORDER BY p.id DESC";
+        
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll();
@@ -57,9 +59,10 @@ class Paciente extends Model {
         ]);
     }
 
-    public function eliminar($id){
-        $stmt = $this->db->prepare("DELETE FROM pacientes WHERE id = :id");
-        return $stmt->execute([':id' => $id]);
+   public function desactivar($id) {
+        $sql = "UPDATE pacientes SET estado = 'inactivo' WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$id]);
     }
 
     public function existeCedula($cedula, $exceptId = null){

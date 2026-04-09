@@ -1,11 +1,17 @@
 <?php
 
 require_once __DIR__ . '/../middleware/auth.php';
-require_once __DIR__ . '/../core/Model.php';
+require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/Paciente.php';
 require_once __DIR__ . '/../models/Cita.php';
 
-class DashboardController extends Model {
+class DashboardController extends Controller {
+    private $db;
+
+    public function __construct(){
+        $database = new Database();
+        $this->db = $database->conectar();
+    }
     public function index(){
         require_login();
 
@@ -27,6 +33,7 @@ class DashboardController extends Model {
             $totalHistoriales = $pacienteModel->totalHistoriales($pacienteId);
             $ultimasCitas = $citaModel->obtenerPorPacienteUsuario(current_user_id());
             $ultimasCitas = array_slice($ultimasCitas, 0, 5);
+            $this->logActivity('VIEW', 'dashboard', 'Ingresó al panel principal.');
             require_once __DIR__ . '/../views/dashboard.php';
             return;
         }
@@ -58,6 +65,7 @@ class DashboardController extends Model {
             $ultimasCitas = $this->db->query($sql)->fetchAll();
         }
 
+        $this->logActivity('VIEW', 'dashboard', 'Ingresó al panel principal.');
         require_once __DIR__ . '/../views/dashboard.php';
     }
 }

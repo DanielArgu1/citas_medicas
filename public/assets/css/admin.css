@@ -1,0 +1,221 @@
+/* ======= DISEÑO GENERAL ======= */
+body {
+    font-family: 'Inter', sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    margin: 0;
+    padding: 0;
+}
+
+.section-title {
+    font-size: 32px;
+    font-weight: 900;
+    margin-bottom: 28px;
+    color: #0f172a;
+}
+
+/* ====== TARJETAS DE ESTADÍSTICAS ====== */
+.report-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: linear-gradient(145deg, #ffffff, #f0f4f8);
+    border-radius: 24px;
+    padding: 24px 28px;
+    box-shadow: 0 20px 40px rgba(15,23,42,.08);
+    transition: transform 0.4s, box-shadow 0.4s;
+    cursor: default;
+}
+
+.stat-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 30px 60px rgba(15,23,42,.12);
+}
+
+.stat-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 900;
+    color: #0f172a;
+    transition: color 0.3s;
+}
+
+/* ====== TABLA DE AUDITORÍA ====== */
+.table-card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 20px 40px rgba(15,23,42,.08);
+    border: 1px solid #e5e7eb;
+    overflow-x: auto;
+    transition: box-shadow 0.3s;
+}
+
+.table-card:hover {
+    box-shadow: 0 30px 60px rgba(15,23,42,.12);
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.table-header h2 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.table-header button {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    padding: 12px 20px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.table-header button:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+}
+
+/* ====== FILTROS ====== */
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.filters select,
+.filters input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #dbe2ea;
+    border-radius: 14px;
+    outline: none;
+    background: #fff;
+    color: #1e293b;
+    font-size: 14px;
+    transition: border 0.3s, box-shadow 0.3s;
+}
+
+.filters select:focus,
+.filters input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59,130,246,.15);
+}
+
+.filters-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* ====== TABLA ====== */
+.table-card table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+    font-size: 14px;
+}
+
+.table-card th,
+.table-card td {
+    text-align: left;
+    padding: 16px 14px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+.table-card th {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table-card td {
+    color: #1e293b;
+}
+
+.table-card tr:hover {
+    background: #f1f5f9;
+}
+
+/* ====== BADGES ====== */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: capitalize;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* Auditoría colores */
+.badge.crear, .badge.insert { background: #dcfce7; color: #166534; }
+.badge.editar, .badge.update { background: #fef3c7; color: #92400e; }
+.badge.eliminar, .badge.delete { background: #fee2e2; color: #991b1b; }
+.badge.login, .badge.acceso { background: #e0f2fe; color: #075985; }
+
+.detalles-audit {
+    font-family: monospace;
+    background: #f1f5f9;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    font-size: 12px;
+    display: block;
+    max-width: 380px;
+    word-wrap: break-word;
+}
+
+/* Mensaje vacío */
+.empty-cell {
+    text-align: center;
+    color: #94a3b8;
+    padding: 40px;
+    font-style: italic;
+}
+
+/* ====== IMPRESIÓN ====== */
+@media print {
+    .sidebar, .menu, nav, .btn, .filters, .filters-grid, .table-header button {
+        display: none !important;
+    }
+    body { margin: 0; padding: 0; background: #fff; }
+    .main-content, .content { margin: 0; padding: 0; width: 100%; }
+    .table-card { box-shadow: none !important; border: 1px solid #ddd; }
+}

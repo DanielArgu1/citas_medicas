@@ -1,7 +1,11 @@
 <?php
 
+require_once __DIR__ . '/../app/middleware/auth.php';
+
 $controller = $_GET['controller'] ?? (isset($_SESSION['usuario_id']) ? 'dashboard' : 'auth');
 $action = $_GET['action'] ?? (isset($_SESSION['usuario_id']) ? 'index' : 'login');
+
+enforce_password_change($controller, $action);
 
 switch($controller){
     case 'auth':
@@ -27,6 +31,10 @@ switch($controller){
     case 'reporte':
         require_once __DIR__ . '/../app/controllers/ReporteController.php';
         $ctrl = new ReporteController();
+        break;
+    case 'auditoria':
+        require_once __DIR__ . '/../app/controllers/AuditoriaController.php';
+        $ctrl = new AuditoriaController();
         break;
     case 'historial':
         require_once __DIR__ . '/../app/controllers/HistorialController.php';

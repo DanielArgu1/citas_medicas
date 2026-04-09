@@ -4,10 +4,14 @@ require_once __DIR__ . '/../core/Model.php';
 
 class Medico extends Model {
 
-    public function obtenerTodos(){
-        $stmt = $this->db->prepare("SELECT * FROM medicos ORDER BY id DESC");
+    public function obtenerTodos() {
+        $sql = "SELECT * FROM medicos 
+                WHERE TRIM(LOWER(estado)) = 'activo' 
+                ORDER BY nombre ASC";
+        
+        $stmt = $this->db->prepare($sql);
         $stmt->execute();
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerPorId($id){
@@ -44,8 +48,10 @@ class Medico extends Model {
         ]);
     }
 
-    public function eliminar($id){
-        $stmt = $this->db->prepare("DELETE FROM medicos WHERE id = :id");
-        return $stmt->execute([':id' => $id]);
+    public function desactivar($id) {
+        
+        $sql = "UPDATE medicos SET estado = 'inactive' WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$id]);
     }
 }
